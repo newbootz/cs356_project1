@@ -41,11 +41,11 @@ int main ( int argc, char *argv[] )
       len = sizeof(cliaddr);
       n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
       sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
-      printf("-------------------------------------------------------\n");
+//      printf("-------------------------------------------------------\n");
       mesg[n] = 0;
-      printf("Received the following:\n");
+//      printf("Received the following:\n");
       printf("%s",mesg);
-      printf("-------------------------------------------------------\n");
+//      printf("-------------------------------------------------------\n");
    }
 	return 0;
 }
