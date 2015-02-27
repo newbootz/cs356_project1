@@ -24,8 +24,24 @@ when appropriate.
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
-
+#include <time.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/signal.h>
+int sockfd,n;
+struct sockaddr_in servaddr, cliaddr;
+char sendline[1000];
+void alarmhand(int signal)
+{
+	printf("TIMEOUT FOR THIS PACKET\n\n\n");
+	sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
+	
+	alarm(2);
+}
+//void send_packet(int signal,int sockfd, char* sendline,struct sockaddr_in servaddr)
+//{
+//	sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
+//}
 int main ( int argc, char *argv[] )
 {
 	int i;
@@ -34,10 +50,16 @@ int main ( int argc, char *argv[] )
 	char * file_name;
 	int number_messages;
 
-	int sockfd,n;
-	struct sockaddr_in servaddr, cliaddr;
-	char sendline[1000];
-    char recvline[1000];
+//	int sockfd,n;
+//	struct sockaddr_in servaddr, cliaddr;
+//	char sendline[1000];
+    	char recvline[1000];
+	clock_t begin, end;
+	double time_spent;
+	//set up timer for wait time on packets
+	struct timespec tim, tim2;
+	tim.tv_sec = 1;
+	tim.tv_sec = 5000000;
 
 	for(i = 0; i < argc; ++i)
 	{
@@ -65,6 +87,7 @@ int main ( int argc, char *argv[] )
 		}
 		
 	}
+	begin = clock();
 	//reading bytes from file
 	FILE *fileptr;
 	char *buffer;
@@ -96,6 +119,7 @@ int main ( int argc, char *argv[] )
 	char* buffer_ptr = buffer;
 	int reached_eof = 0;
 	printf("about to break file up into packets\n\n\n");
+	
 	while(!reached_eof)
 	{
 		//add header packet_id and file_size
@@ -135,8 +159,12 @@ int main ( int argc, char *argv[] )
 		//send the packet
 	    sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
 //	    while(1)
-//	    {
+//	    {signal(SIGALRM,alarmhand);
+//void alarmhand(int signal,int sockfd, char* sendline,struct sockaddr_in servaddr)
+		signal(SIGALRM,alarmhand);
+		alarm(2);
 	    	n=recvfrom(sockfd,recvline,1000,0,NULL,NULL);
+		alarm(0);
 	    	fputs(recvline,stdout);
 //		printf("%s\n",(char*)(&recvline[8]));
 //	    	if(0 < n)
@@ -151,10 +179,10 @@ int main ( int argc, char *argv[] )
 		memset(recvline,0,sizeof(recvline));
 	}
 	printf("finished sending file\n\n\n");
+	end = clock();
+	time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 	return 0;
 }
-
-
 
 
 
