@@ -5,6 +5,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+static int recievedAll(int arr[])
+{
+	int i;
+	int counter = 0;
+	for(i = 0; i < 5; i++)
+	{
+		if(arr[i] == 0){counter++}
+	}
+	return i;
+}
+
 int main ( int argc, char *argv[] )
 {
 	int i;
