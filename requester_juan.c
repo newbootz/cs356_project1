@@ -101,8 +101,7 @@ int main ( int argc, char *argv[] )
 	fread(buffer, filelen, 1, fileptr); // Read in the entire file
 	fclose(fileptr);
 	//finished reading bytes from file
-	// int window[5];
-	// char cache[5000];
+	
 	int packet_id = 0;
 	//setup socket
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -110,11 +109,7 @@ int main ( int argc, char *argv[] )
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr=inet_addr(ip_address);
     servaddr.sin_port=htons(port_number);
-	//set window size to five
-	// for(i=0; i < 5; ++i)
-	// {
-	// 	window[i] = 0;
-	// }
+	
 
     for(i =0; i < number_messages; i++){
 		printf("\nNumber: %d\n\n\n", i+1);
@@ -123,20 +118,11 @@ int main ( int argc, char *argv[] )
 		printf("about to break file up into packets\n\n\n");
 		while(!reached_eof)
 		{
-			//add header packet_id and file_size
-			//sendline[0] = packet_id;
-			//sendline[4] = (filelen+1)*sizeof(char);
-	//		int * pip = (int*)(&sendline[0]);
-	//		*pip = packet_id;
-	//		int * fsp = (int*)(&sendline[4]);
-	//		*fsp = (filelen+1)*sizeof(char);
+			//add header to packet
 			int offset = snprintf(sendline, sizeof(sendline), "%d", packet_id);
 			//printf("offset: %d\n", offset);
 			sendline[offset++] = '|';
-			/*printf("Buff %s\n", nBuff);
-			printf("sizeof Buff %lu\n", sizeof(nBuff));*/
-	//		int offset = 8;
-			//int offset = ;
+			
 			//keep looping until we fill up the packet with info
 			printf("\n\nmaking a packet number: %d\n\n\n", packet_id);
 			while(offset < 999 )
@@ -161,13 +147,11 @@ int main ( int argc, char *argv[] )
 
 			printf("finished packet number: %d\n\n\n", packet_id);
 			offset = 0;
-			//finished filling up this packet, save it in the cache
-			//strcpy(cache[(id%5)*1000],sendline);
+			
 
 			//send the packet
 		    sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
-	//	    while(1)
-	//	    {
+	
 		    n=recvfrom(sockfd,recvline,1000,0,NULL,NULL);
 		    //get packet id from received packet and compare to send
 		    // packet id; If they are the same then print it
@@ -175,19 +159,10 @@ int main ( int argc, char *argv[] )
 		    if(getPacketID(recvline) == packet_id)
 		    {
 		    	recTemp = getPacketData(recvline);
-
-		    	//fputs(recvline,stdout);
 		    	fputs(recTemp,stdout);
 		    }
 		    
-	//		printf("%s\n",(char*)(&recvline[8]));
-	//	    	if(0 < n)
-	//	    	{
-	//	    		break;
-	//	    	}
-	//	    }
-			//increase packet_id, lets fill up another packet
-	//		return 0;
+	
 			packet_id+=1;
 			memset(sendline,0,sizeof(sendline));
 			memset(recvline,0,sizeof(recvline));
