@@ -59,9 +59,25 @@ static int getPacketID(char p[])
 	return id;
 }
 
-static char * getPacketData(char p[])
+static int getFileLenPacket(char p[])
 {
 	char *temp = strchr(p, '|');
+	temp+=1;
+	char num[30];
+	int len = -1;
+	int i = 0;
+	while(temp[i] != '-')
+	{
+		num[i] = temp[i]; 
+		i++;
+	}
+	len = atoi(num);
+	return len;
+}
+
+static char * getPacketData(char p[])
+{
+	char *temp = strchr(p, '-');
 	return temp+=1;
 }
 
@@ -112,12 +128,15 @@ int main ( int argc, char *argv[] )
 		}
 		
 	}
+	/*printf("Before being clock\n");
 	begin = clock();
+	printf("After being clock\n");*/
 	//reading bytes from file
 	FILE *fileptr;
 	char *buffer;
 	long filelen;
 	fileptr = fopen(file_name,"rb");
+	printf("After file open\n");
 	fseek(fileptr,0,SEEK_END);
 	filelen = ftell(fileptr);
 	rewind(fileptr);
@@ -139,8 +158,11 @@ int main ( int argc, char *argv[] )
 	int reached_eof = 0;
 	printf("about to break file up into packets\n\n\n");
 	
-	for(i =0; i < number_messages; i++)
+	for(i = 0; i < number_messages; i++)
 	{
+		
+		begin = clock();
+		printf("Begin time: %ld\n", end);
 		printf("\nNumber: %d\n\n\n", i+1);
 		char* buffer_ptr = buffer;
 		int reached_eof = 0;
@@ -150,8 +172,9 @@ int main ( int argc, char *argv[] )
 		{
 			//add HEADER to packet
 			int offset = snprintf(sendline, sizeof(sendline), "%d|%lu", packet_id, filelen);
+			printf("%d|%lu\n", packet_id, filelen);
 			//printf("offset: %d\n", offset);
-			sendline[offset++] = '|';
+			sendline[offset++] = '-';
 			
 			//keep looping until we fill up the packet with info
 			printf("\n\nmaking a packet number: %d\n\n\n", packet_id);
@@ -196,12 +219,7 @@ int main ( int argc, char *argv[] )
 			    	recTemp = getPacketData(recvline);
 			    	fputs(recTemp,stdout);
 			    }
-	//		printf("%s\n",(char*)(&recvline[8]));
-	//	    	if(0 < n)
-	//	    	{
-	//	    		break;
-	//	    	}
-	//	    }
+
 			//increase packet_id, lets fill up another packet
 	//		return 0;
 			packet_id+=1;
@@ -209,9 +227,11 @@ int main ( int argc, char *argv[] )
 			memset(recvline,0,sizeof(recvline));
 		}
 
-		printf("finished sending file\n\n\n");
+		printf("\nfinished sending file\n\n\n");
 		end = clock();
+		printf("End time: %ld\n", end);
 		time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-		return 0;
+		printf("RTT: %f %f\n", time_spent, (double)(end - begin));
 	}
+	return 0;
 }
