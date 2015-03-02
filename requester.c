@@ -102,6 +102,8 @@ int main ( int argc, char *argv[] )
 	tim.tv_sec = 1;
 	tim.tv_sec = 5000000;
 
+	memset(sendline,0,sizeof(sendline));
+
 	for(i = 0; i < argc; ++i)
 	{
 		if(argv[i][0] == '-')
@@ -136,7 +138,7 @@ int main ( int argc, char *argv[] )
 	char *buffer;
 	long filelen;
 	fileptr = fopen(file_name,"rb");
-	printf("After file open\n");
+	//printf("After file open\n");
 	fseek(fileptr,0,SEEK_END);
 	filelen = ftell(fileptr);
 	rewind(fileptr);
@@ -162,7 +164,7 @@ int main ( int argc, char *argv[] )
 	{
 		
 		begin = clock();
-		printf("Begin time: %ld\n", end);
+		//printf("Begin time: %ld\n", end);
 		printf("\nNumber: %d\n\n\n", i+1);
 		char* buffer_ptr = buffer;
 		int reached_eof = 0;
@@ -172,7 +174,7 @@ int main ( int argc, char *argv[] )
 		{
 			//add HEADER to packet
 			int offset = snprintf(sendline, sizeof(sendline), "%d|%lu", packet_id, filelen);
-			printf("%d|%lu\n", packet_id, filelen);
+			//printf("%d|%lu\n", packet_id, filelen);
 			//printf("offset: %d\n", offset);
 			sendline[offset++] = '-';
 			
@@ -227,11 +229,12 @@ int main ( int argc, char *argv[] )
 			memset(recvline,0,sizeof(recvline));
 		}
 
-		printf("\nfinished sending file\n\n\n");
+		//printf("\nfinished sending file\n\n\n");
 		end = clock();
-		printf("End time: %ld\n", end);
-		time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-		printf("RTT: %f %f\n", time_spent, (double)(end - begin));
+		//printf("End time: %ld\n", end);
+		time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+		//time_spent = end - begin;
+		printf("\nRTT: %.4f\n", time_spent);
 	}
 	return 0;
 }

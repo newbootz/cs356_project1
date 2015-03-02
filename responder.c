@@ -1,3 +1,8 @@
+/*
+Jesus Galvan
+Juan P. Mata jpm2873
+*/
+
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -5,15 +10,40 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-static int recievedAll(int arr[])
+static int getPacketID(char p[])
 {
-	int i;
-	int counter = 0;
-	for(i = 0; i < 5; i++)
+	char temp[20];
+	int id = -1;
+	int i = 0;
+	while(p[i] != '|')
 	{
-		if(arr[i] == 0){counter++}
+		temp[i] = p[i]; 
+		i++;
 	}
-	return i;
+	id = atoi(temp);
+	return id;
+}
+
+static int getFileLenPacket(char p[])
+{
+	char *temp = strchr(p, '|');
+	temp+=1;
+	char num[30];
+	int len = -1;
+	int i = 0;
+	while(temp[i] != '-')
+	{
+		num[i] = temp[i]; 
+		i++;
+	}
+	len = atoi(num);
+	return len;
+}
+
+static char * getPacketData(char p[])
+{
+	char *temp = strchr(p, '-');
+	return temp+=1;
 }
 
 int main ( int argc, char *argv[] )
@@ -25,11 +55,13 @@ int main ( int argc, char *argv[] )
 	struct sockaddr_in servaddr, cliaddr;
 	socklen_t len;
 	char mesg[1000];
+	char * recTemp;
+	int packet_id;
+	int packet_used[9000] = { 0 };
 
-	int cache[5] = { 0 };
-	char pCharNum[4];
-	int packetNum;
-	//char *buffer;
+	char *buffer;
+	long filelen;
+	int index;
 
 	for(i = 0; i < argc; ++i)
 	{
@@ -58,20 +90,28 @@ int main ( int argc, char *argv[] )
       len = sizeof(cliaddr);
       n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
       //get packet number and convert to int
-      for(i = 0; i< 5; i++){pCharNum[i] = mesg[i];} 
-      packetNum = atoi(pCharNum);
-  	  printf("Packet Num: %d\n", packetNum);
-  	  //check cache for if we already have it
-      if(cache[packetNum % 5] == 0)
+      packet_id = getPacketID(mesg);
+      if(packet_id == 0)
       {
-      	cache[packetNum % 5] = 1;
-      	//put message in storage
+      	filelen = getFileLenPacket(mesg);
+      	buffer = (char *)malloc((filelen+1)*sizeof(char)); // Enough memory for file + \0
+      	//packet_used[9000] = { 0 };
       }
+      if(packet_used[packet_id] == 0)
+      {
+    	  recTemp = getPacketData(mesg);
+    	  fputs(recTemp,stdout);
+    	  index = snprintf(buffer, sizeof(buffer), "%s", recTemp);
+    	  packet_used[packet_id] = 1;
+      } 
+      
+  	  //check cache for if we already have it
       sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
 //      printf("-------------------------------------------------------\n");
-      mesg[n] = 0;
+      //mesg[n] = 0;
+      memset(mesg,0,sizeof(mesg));
 //      printf("Received the following:\n");
-      printf("%s",mesg);
+      //printf("%s",mesg);
 //      printf("-------------------------------------------------------\n");
    }
 	return 0;
