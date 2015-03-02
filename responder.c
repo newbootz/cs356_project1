@@ -95,7 +95,7 @@ int main ( int argc, char *argv[] )
       {
       	filelen = getFileLenPacket(mesg);
       	buffer = (char *)malloc((filelen+1)*sizeof(char)); // Enough memory for file + \0
-      	//packet_used[9000] = { 0 };
+      	memset(packet_used,0,sizeof(packet_used));
       }
       if(packet_used[packet_id] == 0)
       {
