@@ -1,5 +1,5 @@
 /*
-Jesus Galvan
+Jesus Galvan jg42437
 Juan P. Mata jpm2873
 
 a client program and a server program. 
@@ -32,22 +32,22 @@ when appropriate.
 #include <signal.h>
 #include <sys/signal.h>
 
+/*connection and packet info global so its accessible to all our functions*/
 int sockfd,n;
 struct sockaddr_in servaddr, cliaddr;
 char sendline[1000];
+//double total_clock = 0.0;
 
+/*handler for our timeout alarm*/
 void alarmhand(int signal)
 {
-	printf("TIMEOUT FOR THIS PACKET\n\n\n");
+	//printf("TIMEOUT FOR THIS PACKET\n\n\n");
+	/*resend the packet and reset the alarm*/
 	sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
 	
 	alarm(2);
 }
-//void send_packet(int signal,int sockfd, char* sendline,struct sockaddr_in servaddr)
-//{
-//	sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
-//}
-
+/*function that extracts packet id from the packet*/
 static int getPacketID(char p[])
 {
 	char temp[20];
@@ -61,7 +61,7 @@ static int getPacketID(char p[])
 	id = atoi(temp);
 	return id;
 }
-
+//fucntion that extracts packet data from the packet
 static char * getPacketData(char p[])
 {
 	char *temp = strchr(p, '-');
@@ -70,6 +70,7 @@ static char * getPacketData(char p[])
 
 // CITE: got this method from geeksforgeeks.org
 // minor modification for use in my code
+/*used for validating the ip address*/
 int valid_digit(char *ip_str)
 {
     while (*ip_str) {
@@ -143,7 +144,8 @@ int is_valid_ip(char *ip_str)
  	}
     return 1;
 }
-
+/*makes sure that the packet id and length
+are all digits*/
 int valid_num(char *num)
 {
 	int i =0;
@@ -159,23 +161,21 @@ int valid_num(char *num)
 int main ( int argc, char *argv[] )
 {
 	int i;
+	/*variables to hold server information to establish connection*/
 	char * ip_address;
 	int port_number = 12000;
+	/*variables for filename and number of times to send message*/
 	char * file_name;
 	int number_messages;
 
-//	int sockfd,n;
-//	struct sockaddr_in servaddr, cliaddr;
-//	char sendline[1000];
+	/*array of chars used to receive acks*/
     char recvline[1000];
     char * recTemp;
     char nBuff[sizeof(int)*3+2];
+    /*clock begin and end to calculate rtt*/
 	clock_t begin, end;
 	double time_spent;
-	//set up timer for wait time on packets
-	struct timespec tim, tim2;
-	tim.tv_sec = 1;
-	tim.tv_sec = 5000000;
+	
 
 	// boolean check if all args given
 	int a =0;
@@ -184,7 +184,7 @@ int main ( int argc, char *argv[] )
 	int m = 0;
 
 	memset(sendline,0,sizeof(sendline));
-
+/*parsing our arguments*/
 	for(i = 0; i < argc; ++i)
 	{
 		if(argv[i][0] == '-')
@@ -225,10 +225,8 @@ int main ( int argc, char *argv[] )
 		
 	}
 	if(a !=1 || p !=1 || f !=1 || m !=1){ printf("Incorrect Arguments!\n");}
-	/*printf("Before being clock\n");
-	begin = clock();
-	printf("After being clock\n");*/
-	//reading bytes from file
+
+	/*opening the file*/
 	FILE *fileptr;
 	char *buffer;
 	long filelen;
@@ -236,35 +234,34 @@ int main ( int argc, char *argv[] )
 	if(fileptr == NULL)
 	{	printf("Invalid File!\n");
 		return 0;}
-	//printf("After file open\n");
+	/*find the length of the file and malloc enough memory for the file*/
 	fseek(fileptr,0,SEEK_END);
 	filelen = ftell(fileptr);
 	rewind(fileptr);
 
 	buffer = (char *)malloc((filelen+1)*sizeof(char)); // Enough memory for file + \0
 	fread(buffer, filelen, 1, fileptr); // Read in the entire file
-	fclose(fileptr);
-	//finished reading bytes from file
-	//allocate array for storing RTT values
+	fclose(fileptr); //finished reading copying content of the file to memory, close file
+	//variables for storing RTT's
 	double rtt_sum = 0.0;
 	double rtt_min = 0.0;
 	double rtt_max = 0.0;
-
+	//variable for packet id
 	int packet_id = 0;
-	//setup socket
+	/*setup the socket*/
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr=inet_addr(ip_address);
     servaddr.sin_port=htons(port_number);
-
+    /*pointer to read file content*/
 	char* buffer_ptr = buffer;
 	int reached_eof = 0;
 //	printf("about to break file up into packets\n\n\n");
-	
+	/*send the "packet number_messages" times to the server*/
 	for(i = 0; i < number_messages; i++)
 	{
-		
+		/*start the clock*/
 		begin = clock();
 		//printf("Begin time: %ld\n", end);
 		printf("\nNumber: %d\n\n", i+1);
@@ -272,6 +269,7 @@ int main ( int argc, char *argv[] )
 		int reached_eof = 0;
 //		printf("about to break file up into packets\n\n\n");
 
+		/*keep looping until we reach eof*/
 		while(!reached_eof)
 		{
 			//add HEADER to packet
@@ -303,37 +301,41 @@ int main ( int argc, char *argv[] )
 			}
 
 			//printf("finished packet number: %d\n\n\n", packet_id);
+			/*reset offset*/
 			offset = 0;
 			
 
-			//send the packet
+			//send the packet to the server
 		    sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
 	
-		    //n=recvfrom(sockfd,recvline,1000,0,NULL,NULL);
-		    //get packet id from received packet and compare to send
-		    // packet id; If they are the same then print it
-		    
+		  
+		    /*install alarm handler, start alarm until timeout, if we don't receive an
+		    ack before the alarm goes off then we consider it a timeout*/
 			signal(SIGALRM,alarmhand);
 			alarm(2);
-		    	n=recvfrom(sockfd,recvline,1000,0,NULL,NULL);
+		    n=recvfrom(sockfd,recvline,1000,0,NULL,NULL);
+		    //turn off the alarm
 			alarm(0);
-		    	//fputs(recvline,stdout);
-				if(getPacketID(recvline) == packet_id)
-			    {
-			    	recTemp = getPacketData(recvline);
-			    	fputs(recTemp,stdout);
-			    }
+			/*get packet id from received packet and compare to send
+		    packet id; If they are the same then print it*/
+			if(getPacketID(recvline) == packet_id)
+		    {
+		    	recTemp = getPacketData(recvline);
+		    	fputs(recTemp,stdout);
+		    }
 
-			//increase packet_id, lets fill up another packet
-	//		return 0;
+		    /*increment packet id*/
 			packet_id+=1;
 			memset(sendline,0,sizeof(sendline));
 			memset(recvline,0,sizeof(recvline));
 		}
 
-		//printf("\nfinished sending file\n\n\n");
+		/*finished sending the file, stop the clock*/
 		end = clock();
 		//printf("End time: %ld\n", end);
+
+		/*finished sending file, calculate rtt for this iteration, print it, 
+		and keep track of max and min*/
 		time_spent = (double) (end - begin) / (CLOCKS_PER_SEC/1000);
 		if(rtt_min == 0.0){rtt_min = time_spent;}
 		if(time_spent < rtt_min)
@@ -345,12 +347,12 @@ int main ( int argc, char *argv[] )
 			rtt_max = time_spent;
 		}
 		rtt_sum+=time_spent;
-		//time_spent = end - begin;
 		printf("\nRTT: %fms\n", time_spent);
 	}
+	/*finished sending "number_messages",calculate in ms what the 
+	round trip time avg, max, and min were and print them*/
 	double avg_rtt = rtt_sum/number_messages;
-	printf("AveRTT: %f ms MinRTT: %f ms MaxRTT: %f ms\n",avg_rtt,rtt_min,rtt_max);
+	printf("\nAveRTT: %f ms MinRTT: %f ms MaxRTT: %f ms\n",avg_rtt,rtt_min,rtt_max);
 	return 0;
 }
-
 
