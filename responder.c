@@ -121,7 +121,11 @@ int main ( int argc, char *argv[] )
    servaddr.sin_family = AF_INET;
    servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
    servaddr.sin_port=htons(port_number);
-   bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
+   if( bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr)) < 0)
+   {
+	printf("Failed to bind to port %d\n",port_number);
+	return 0;
+   }
 
 /*keep listening in infinite loop*/
    for (;;)
