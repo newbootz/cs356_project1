@@ -121,13 +121,20 @@ int main ( int argc, char *argv[] )
    servaddr.sin_family = AF_INET;
    servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
    servaddr.sin_port=htons(port_number);
-   bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
+   if(bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr))< 0)
+   {
+	printf("Failed to bind port %d\n",port_number);
+	return 0;
+   }
 
 /*keep listening in infinite loop*/
    for (;;)
    {
       len = sizeof(cliaddr);
-      n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
+      if(n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len)<0)
+      {
+	printf("Receive error, failed to receive packet\n");
+      }
       //get packet number and convert to int
       packet_id = getPacketID(mesg);
       /*if its the first packet that we receive from the client, get filelen and allocate
@@ -149,7 +156,10 @@ int main ( int argc, char *argv[] )
       
       //sleep(6)
       /*if we receive a message always send an ack back, even if we already had packet*/
-      sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
+      if(sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr))<0)
+      {
+	printf("Sending error, failed to send ack to client\n");
+      }
       //reset packet buffer to receive another packet
       memset(mesg,0,sizeof(mesg));
    }
