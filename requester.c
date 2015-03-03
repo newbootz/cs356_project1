@@ -245,6 +245,10 @@ int main ( int argc, char *argv[] )
 	fread(buffer, filelen, 1, fileptr); // Read in the entire file
 	fclose(fileptr);
 	//finished reading bytes from file
+	//allocate array for storing RTT values
+	double rtt_sum = 0.0;
+	double rtt_min = 0.0;
+	double rtt_max = 0.0;
 
 	int packet_id = 0;
 	//setup socket
@@ -256,17 +260,17 @@ int main ( int argc, char *argv[] )
 
 	char* buffer_ptr = buffer;
 	int reached_eof = 0;
-	printf("about to break file up into packets\n\n\n");
+//	printf("about to break file up into packets\n\n\n");
 	
 	for(i = 0; i < number_messages; i++)
 	{
 		
 		begin = clock();
 		//printf("Begin time: %ld\n", end);
-		printf("\nNumber: %d\n\n\n", i+1);
+		printf("\nNumber: %d\n\n", i+1);
 		char* buffer_ptr = buffer;
 		int reached_eof = 0;
-		printf("about to break file up into packets\n\n\n");
+//		printf("about to break file up into packets\n\n\n");
 
 		while(!reached_eof)
 		{
@@ -277,7 +281,7 @@ int main ( int argc, char *argv[] )
 			sendline[offset++] = '-';
 			
 			//keep looping until we fill up the packet with info
-			printf("\n\nmaking a packet number: %d\n\n\n", packet_id);
+			//printf("\n\nmaking a packet number: %d\n\n\n", packet_id);
 			while(offset < 999 )
 			{
 				//make sure we haven't reached_eof
@@ -298,7 +302,7 @@ int main ( int argc, char *argv[] )
 				}
 			}
 
-			printf("finished packet number: %d\n\n\n", packet_id);
+			//printf("finished packet number: %d\n\n\n", packet_id);
 			offset = 0;
 			
 
@@ -330,9 +334,22 @@ int main ( int argc, char *argv[] )
 		//printf("\nfinished sending file\n\n\n");
 		end = clock();
 		//printf("End time: %ld\n", end);
-		time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+		time_spent = (double) (end - begin) / (CLOCKS_PER_SEC/1000);
+		if(rtt_min == 0.0){rtt_min = time_spent;}
+		if(time_spent < rtt_min)
+		{
+			rtt_min = time_spent;
+		}
+		if(rtt_max < time_spent)
+		{
+			rtt_max = time_spent;
+		}
+		rtt_sum+=time_spent;
 		//time_spent = end - begin;
-		printf("\nRTT: %.4f\n", time_spent);
+		printf("\nRTT: %fms\n", time_spent);
 	}
+	double avg_rtt = rtt_sum/number_messages;
+	printf("AveRTT: %f ms MinRTT: %f ms MaxRTT: %f ms\n",avg_rtt,rtt_min,rtt_max);
 	return 0;
 }
+
