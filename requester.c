@@ -1,4 +1,7 @@
 /*
+Jesus Galvan
+Juan P. Mata jpm2873
+
 a client program and a server program. 
 All communication must be done in UDP. 
 Each program is detailed below. 
@@ -59,26 +62,98 @@ static int getPacketID(char p[])
 	return id;
 }
 
-static int getFileLenPacket(char p[])
-{
-	char *temp = strchr(p, '|');
-	temp+=1;
-	char num[30];
-	int len = -1;
-	int i = 0;
-	while(temp[i] != '-')
-	{
-		num[i] = temp[i]; 
-		i++;
-	}
-	len = atoi(num);
-	return len;
-}
-
 static char * getPacketData(char p[])
 {
 	char *temp = strchr(p, '-');
 	return temp+=1;
+}
+
+// CITE: got this method from geeksforgeeks.org
+// minor modification for use in my code
+int valid_digit(char *ip_str)
+{
+    while (*ip_str) {
+        if (*ip_str >= '0' && *ip_str <= '9')
+            ++ip_str;
+        else
+        {
+        	return 0;
+ 		}
+    }
+    return 1;
+}
+
+// CITE: got this method from geeksforgeeks.org
+// minor modifications for use in my code
+int is_valid_ip(char *ip_str)
+{
+    int i, num, dots = 0;
+    char *ptr;
+    char temp[20];
+ 
+    if (ip_str == NULL)
+    {
+    	printf("Invalid IP Address\n");	
+        return 0;
+ 	}
+ 	
+ 	i=0;
+ 	while(ip_str[i] != '\0')
+    {
+    	temp[i] = ip_str[i];
+    	i++;
+    }
+    
+    ptr = strtok(temp, ".");
+ 
+    if (ptr == NULL)
+    {
+    	printf("Invalid IP Address\n");	
+        return 0;
+ 	}
+ 
+    while (ptr) {
+ 
+        /* after parsing string, it must contain only digits */
+        if (!valid_digit(ptr))
+        {
+    		printf("Invalid IP Address\n");	
+        	return 0;
+ 		}
+ 
+        num = atoi(ptr);
+ 
+        /* check for valid IP */
+        if (num >= 0 && num <= 255) {
+            /* parse remaining string */
+            ptr = strtok(NULL, ".");
+            if (ptr != NULL)
+                ++dots;
+        } else{
+    		printf("Invalid IP Address\n");	
+        	return 0;
+ 		  }
+    }
+ 
+    /* valid IP string must contain 3 dots */
+    if (dots != 3)
+     {
+    	printf("Invalid IP Address\n");	
+        return 0;
+ 	}
+    return 1;
+}
+
+int valid_num(char *num)
+{
+	int i =0;
+    while (num[i] != '\0') {
+        if (num[i] >= '0' && num[i] <= '9')
+            i++;
+        else
+        	return 0;
+    }
+    return 1;
 }
 
 int main ( int argc, char *argv[] )
@@ -102,6 +177,12 @@ int main ( int argc, char *argv[] )
 	tim.tv_sec = 1;
 	tim.tv_sec = 5000000;
 
+	// boolean check if all args given
+	int a =0;
+	int p = 0;
+	int f = 0;
+	int m = 0;
+
 	memset(sendline,0,sizeof(sendline));
 
 	for(i = 0; i < argc; ++i)
@@ -112,24 +193,38 @@ int main ( int argc, char *argv[] )
 			{
 				case 'a':
 					ip_address = argv[i+1];
+					if(is_valid_ip(ip_address) == 0){return 0;}
+					ip_address = argv[i+1];
 					printf("IP address: %s\n", ip_address);
+					a = 1;
 					break;
 				case 'p':
+					if(!valid_num(argv[i+1])){printf("Invalid Port Number!\n"); return 0;}
 					port_number = atoi(argv[i+1]);
+					if(port_number <= 0){printf("Invalid Port Number!\n");
+						return 0;}
 					printf("Port number: %d\n", port_number);
+					p = 1;
 					break;
 				case 'f':
 					file_name = argv[i+1];
 					printf("File name: %s\n", file_name);
+					f = 1;
 					break;
 				case 'n':
+					if(!valid_num(argv[i+1])){printf("Invalid Value For -n!\n"); return 0;}
 					number_messages = atoi(argv[i+1]);
+					if(number_messages <= 0)
+					{	printf("Invalid Value For -n!\n");
+						return 0;}
 					printf("Number of Messages: %d\n", number_messages);
+					m = 1;
 
 			}
 		}
 		
 	}
+	if(a !=1 || p !=1 || f !=1 || m !=1){ printf("Incorrect Arguments!\n");}
 	/*printf("Before being clock\n");
 	begin = clock();
 	printf("After being clock\n");*/
@@ -138,6 +233,9 @@ int main ( int argc, char *argv[] )
 	char *buffer;
 	long filelen;
 	fileptr = fopen(file_name,"rb");
+	if(fileptr == NULL)
+	{	printf("Invalid File!\n");
+		return 0;}
 	//printf("After file open\n");
 	fseek(fileptr,0,SEEK_END);
 	filelen = ftell(fileptr);
