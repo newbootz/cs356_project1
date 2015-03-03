@@ -9,6 +9,7 @@ Juan P. Mata jpm2873
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 static int getPacketID(char p[])
 {
@@ -46,6 +47,18 @@ static char * getPacketData(char p[])
 	return temp+=1;
 }
 
+int valid_num(char *num)
+{
+	int i =0;
+    while (num[i] != '\0') {
+        if (num[i] >= '0' && num[i] <= '9')
+            i++;
+        else
+        	return 0;
+    }
+    return 1;
+}
+
 int main ( int argc, char *argv[] )
 {
 	int i;
@@ -70,7 +83,10 @@ int main ( int argc, char *argv[] )
 			switch(tolower(argv[i][1]))
 			{
 				case 'p':
+					if(!valid_num(argv[i+1])){printf("Invalid Port Number!\n"); return 0;}
 					port_number = atoi(argv[i+1]);
+					if(port_number <= 0){printf("Invalid Port Number!\n");
+						return 0;}
 					printf("Port number: %d\n", port_number);
 					break;
 			}
@@ -101,11 +117,12 @@ int main ( int argc, char *argv[] )
       {
     	  recTemp = getPacketData(mesg);
     	  fputs(recTemp,stdout);
-    	  index = snprintf(buffer, sizeof(buffer), "%s", recTemp);
+    	  //index = snprintf(buffer, sizeof(buffer), "%s", recTemp);
     	  packet_used[packet_id] = 1;
       } 
       
   	  //check cache for if we already have it
+  	  sleep(1);
       sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
 //      printf("-------------------------------------------------------\n");
       //mesg[n] = 0;
