@@ -36,6 +36,7 @@ when appropriate.
 int sockfd,n;
 struct sockaddr_in servaddr, cliaddr;
 char sendline[1000];
+int timeouts = 0;
 //double total_clock = 0.0;
 
 /*handler for our timeout alarm*/
@@ -43,6 +44,12 @@ void alarmhand(int signal)
 {
 	//printf("TIMEOUT FOR THIS PACKET\n\n\n");
 	/*resend the packet and reset the alarm*/
+	timeouts++;
+	if(timeouts == 10)
+	{
+		printf("ERROR Connection Failed!\nCheck your arguments.\n");
+		exit(0);
+	}
 	sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
 	
 	alarm(2);
@@ -316,6 +323,7 @@ int main ( int argc, char *argv[] )
 		    n=recvfrom(sockfd,recvline,1000,0,NULL,NULL);
 		    //turn off the alarm
 			alarm(0);
+			timeouts = 0;
 			/*get packet id from received packet and compare to send
 		    packet id; If they are the same then print it*/
 			if(getPacketID(recvline) == packet_id)

@@ -1,19 +1,10 @@
 /*
-Jesus Galvan
+Jesus Galvan jg42437
 Juan P. Mata jpm2873
 */
 
 DESIGN
 
-Design documents (named design.txt or design.pdf). Specifically, this must
-include (i) your header format and (ii) a brief overview of all your functions in
-each file.
-⁃ After describing your header format, be sure to say why you made these
-design decisions!
-⁃ Your design document must also detail how you implemented reliable and
-in-order delivery.
-⁃ Your design document should detail how you tested your program (how
-you modeled loss, corner cases you tried, etc).
 
 HEADER
 
@@ -28,6 +19,9 @@ We chose to implement it this way because this was the simplest way we
 could think of for keeping track of packets and assuring everything
 is in order. We would keep track of what packet we were expecting and
 if it didn't come there would be a timeout and the packet would be resent.
+We used the ACKs from the server to send the file. We did not wait 
+until we had the whole file because we thought using the ACKs was a much
+more effcient.
 
 FUNCTIONS
 
@@ -47,9 +41,24 @@ This function takes the packet and retrieves the data(actial content).
 Return: data
 
 alarmhand(int signal)
+This is the handler for our alarm. We use an alarm for our packet
+timeouts, in the handler we keep a couonter of how many times we
+have timed out for a particular packet. In the handler we resend the
+packet, and reset the alarm. If there are more than 20 timeouts
+we assume that the connection is lost.
+
+*****CITE*******
+is_valid_ip(char *ip_str)
+
+valid_digit(char *ip_str)
+
+These methods are for checking for a valid IP Address. We had to make 
+some changes so it works with our code. The code was taken from geeksforgeeks.org.
+Return: 0 if not valid IP
 
 TEST
 
 For testing with lost packets we just didn't send some packets and 
 when the packets weren't received there would be a timeout and the 
-packet would be resent.
+packet would be resent. We also called sleep on the server side to simulate 
+lost acks.
