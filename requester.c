@@ -35,6 +35,7 @@ when appropriate.
 int sockfd,n;
 struct sockaddr_in servaddr, cliaddr;
 char sendline[1000];
+//double total_clock = 0.0;
 
 void alarmhand(int signal)
 {
@@ -43,11 +44,6 @@ void alarmhand(int signal)
 	
 	alarm(2);
 }
-//void send_packet(int signal,int sockfd, char* sendline,struct sockaddr_in servaddr)
-//{
-//	sendto(sockfd,sendline,strlen(sendline),0,(struct sockaddr *)&servaddr,sizeof(servaddr));
-//}
-
 static int getPacketID(char p[])
 {
 	char temp[20];
@@ -349,7 +345,7 @@ int main ( int argc, char *argv[] )
 		printf("\nRTT: %fms\n", time_spent);
 	}
 	double avg_rtt = rtt_sum/number_messages;
-	printf("AveRTT: %f ms MinRTT: %f ms MaxRTT: %f ms\n",avg_rtt,rtt_min,rtt_max);
+	printf("\nAveRTT: %f ms MinRTT: %f ms MaxRTT: %f ms\n",avg_rtt,rtt_min,rtt_max);
 	return 0;
 }
 

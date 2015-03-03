@@ -122,7 +122,7 @@ int main ( int argc, char *argv[] )
       } 
       
   	  //check cache for if we already have it
-  	  sleep(1);
+//  	  sleep(6);
       sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
 //      printf("-------------------------------------------------------\n");
       //mesg[n] = 0;
